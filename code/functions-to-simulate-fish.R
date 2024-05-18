@@ -1,0 +1,113 @@
+library(data.table)
+
+binom_sampling <- function(seed = NULL, N_FISH, N_SAMPLES, SAMPLE_SIZE){
+  if (!is.null(seed)) set.seed(seed)
+  
+  stats <- data.table(sample_id = 1:N_SAMPLES, # in the paper, this is i, which ranges from 1 to n
+                      sample_size = SAMPLE_SIZE, # in the paper, this is t_i
+                      n_tags_in_pond = 0, # in the paper, this is M_i
+                      n_tags_in_sample = 0, # in the paper, this is r_i
+                      n_untagged_in_sample = 0) # in the paper, this is d_i
+  
+  sampled <- matrix(0, nrow = N_FISH, ncol = N_SAMPLES)
+  tagged <- matrix(0, nrow = N_FISH, ncol = N_SAMPLES)
+  sampled_and_tagged <- matrix(0, nrow = N_FISH, ncol = N_SAMPLES)
+  
+  # initial sample; not used in computations because no fish tagged yet
+  sampleA <- sample(x = 1:N_FISH, size = SAMPLE_SIZE, replace = FALSE)
+  tagged[sampleA, 1:N_SAMPLES] <- 1
+  
+  # main samples
+  for (i in 1:N_SAMPLES){
+    sampleA <- sample(x = 1:N_FISH, size = SAMPLE_SIZE, replace = FALSE)
+    sampled[sampleA, i] <- 1
+    if (i < N_SAMPLES){
+      tagged[sampleA, (i+1):N_SAMPLES] <- 1
+    }
+  }
+  
+  # calculate statistics
+  sampled_and_tagged <- sampled * tagged
+  stats[, `:=`(n_tags_in_pond = colSums(tagged),
+               n_tags_in_sample = colSums(sampled_and_tagged))]
+  stats[, n_untagged_in_sample := sample_size - n_tags_in_sample]
+  return(stats)
+}
+
+fish_binom_sampling <- function(seed = NULL, N_FISH, N_SAMPLES, PROB_OF_BEING_SAMPLED){
+  if (!is.null(seed)) set.seed(seed)
+  
+  stats <- data.table(sample_id = 1:N_SAMPLES, # in the paper, this is i, which ranges from 1 to n
+                      sample_size = 0, # in the paper, this is t_i
+                      n_tags_in_pond = 0, # in the paper, this is M_i
+                      n_tags_in_sample = 0, # in the paper, this is r_i
+                      n_untagged_in_sample = 0) # in the paper, this is d_i
+  
+  sampled <- matrix(0, nrow = N_FISH, ncol = N_SAMPLES)
+  tagged <- matrix(0, nrow = N_FISH, ncol = N_SAMPLES)
+  sampled_and_tagged <- matrix(0, nrow = N_FISH, ncol = N_SAMPLES)
+  
+  # to do: consider using rbinom(n = N_FISH * N_SAMPLES, size = 1, prob = PROB_OF_BEING_SAMPLED) to fill out sampled all at once
+  
+  # initial sample; not used in computations because no fish tagged yet
+  sampleB <- rbinom(n = N_FISH, size = 1, prob = PROB_OF_BEING_SAMPLED)
+  tagged[which(sampleB == 1), 1:N_SAMPLES] <- 1
+  
+  # main samples
+  for (i in 1:N_SAMPLES){
+    sampleB <- rbinom(n = N_FISH, size = 1, prob = PROB_OF_BEING_SAMPLED)
+    sampled[which(sampleB == 1), i] <- 1
+    if (i < N_SAMPLES){
+      tagged[which(sampleB == 1), (i+1):N_SAMPLES] <- 1
+    }
+  }
+  
+  # calculate statistics
+  sampled_and_tagged <- sampled * tagged
+  stats[, `:=`(sample_size = colSums(sampled),
+               n_tags_in_pond = colSums(tagged),
+               n_tags_in_sample = colSums(sampled_and_tagged))]
+  stats[, n_untagged_in_sample := sample_size - n_tags_in_sample]
+  return(stats)
+}
+
+pois_sampling <- function(seed = NULL, N_FISH, N_SAMPLES, RATE){
+  if (!is.null(seed)) set.seed(seed)
+  
+  stats <- data.table(sample_id = 1:N_SAMPLES, # in the paper, this is i, which ranges from 1 to n
+                      sample_size = 0, # in the paper, this is t_i
+                      n_tags_in_pond = 0, # in the paper, this is M_i
+                      n_tags_in_sample = 0, # in the paper, this is r_i
+                      n_untagged_in_sample = 0) # in the paper, this is d_i
+  
+  # stats$sample_size <- rpois(n = N_SAMPLES, lambda = RATE)
+  
+  sampled <- matrix(0, nrow = N_FISH, ncol = N_SAMPLES)
+  tagged <- matrix(0, nrow = N_FISH, ncol = N_SAMPLES)
+  sampled_and_tagged <- matrix(0, nrow = N_FISH, ncol = N_SAMPLES)
+  
+  # to do: consider using rpois(n = N_SAMPLES, lambda = RATE) to fill out sampled all at once
+  
+  # initial sample; not used in computations because no fish tagged yet
+  sample_size <- rpois(n = 1, lambda = RATE)
+  sampleC <- sample(1:N_FISH, size = sample_size)
+  tagged[sampleC, 1:N_SAMPLES] <- 1
+  
+  # main samples
+  for (i in 1:N_SAMPLES){
+    sample_size <- rpois(n = 1, lambda = RATE)
+    sampleC <- sample(1:N_FISH, size = sample_size)
+    sampled[sampleC, i] <- 1
+    if (i < N_SAMPLES){
+      tagged[sampleC, (i+1):N_SAMPLES] <- 1
+    }
+  }
+  
+  # calculate statistics
+  sampled_and_tagged <- sampled * tagged
+  stats[, `:=`(sample_size = colSums(sampled),
+               n_tags_in_pond = colSums(tagged),
+               n_tags_in_sample = colSums(sampled_and_tagged))]
+  stats[, n_untagged_in_sample := sample_size - n_tags_in_sample]
+  return(stats)
+}

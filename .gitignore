@@ -1,0 +1,8 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+Schnabel_Inspired_Simulations_cache/*
+Schnabel_Inspired_Simulations_files/*
+Schnabel_Inspired_Simulations.log
