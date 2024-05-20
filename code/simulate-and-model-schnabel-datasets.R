@@ -75,3 +75,9 @@ paper_dataset3C_sim <- function(sim_id, seed = sim_id){
 results_not_printed <- sapply(1:N_SIMS, paper_dataset3C_sim)
 
 
+## Compile results
+
+all_sim_results_long <- melt(all_sim_results,
+                             measure = c("Estimator1_with3terms", "Estimator1_with5terms", "Estimator1_with7terms", "Estimator1_Bound1b", "Estimator2", "Estimator4", "Estimator5", "Estimator6", "Estimator7"),
+                             variable = "Estimator",
+                             value = "Value")
