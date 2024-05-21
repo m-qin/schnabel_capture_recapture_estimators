@@ -13,6 +13,7 @@ estimator1 <- function(stats, n_terms = 5){
   return(real_root)
 }
 
+# to do: check if I included the N_k = Estimator 1 term correctly
 estimator1b_bound <- function(stats, n_terms = 5){
   n_untagged_in_sample <- stats$n_untagged_in_sample
   n_tags_in_pond <- stats$n_tags_in_pond
